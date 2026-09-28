@@ -2,6 +2,7 @@ import ThemedButton from "@/presentation/theme/components/themed-button";
 import ThemedTextInput from "@/presentation/theme/components/themed-input";
 import ThemedLink from "@/presentation/theme/components/themed-link";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
+import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -12,10 +13,13 @@ import {
 
 const LoginScreen = () => {
   const { height } = useWindowDimensions();
+  const backgroundColor = useThemeColor({}, "background");
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <ScrollView style={{ paddingHorizontal: 40 }}>
+      <ScrollView
+        style={{ paddingHorizontal: 40, backgroundColor: backgroundColor }}
+      >
         <View style={{ paddingTop: height * 0.35 }}>
           <ThemedText type="title">Ingresar</ThemedText>
           <ThemedText style={{ color: "grey" }}>
