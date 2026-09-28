@@ -11,10 +11,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/presentation/theme/hooks/use-color-scheme";
+import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import React, { useEffect } from "react";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const backgroundColor = useThemeColor({}, "background");
 
   const [loaded, error] = useFonts({
     KanitRegular: require("./assets/fonts/Kanit-Regular.ttf"),
@@ -33,7 +35,9 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView
+      style={{ backgroundColor: backgroundColor, flex: 1 }}
+    >
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack
           screenOptions={{
