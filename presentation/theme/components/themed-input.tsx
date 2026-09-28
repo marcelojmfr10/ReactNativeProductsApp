@@ -7,7 +7,7 @@ interface Props extends TextInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
 }
 
-const ThemedTextInput = ({ icon, ...rest }: Props) => {
+const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
   const primaryColor = useThemeColor({}, "primary");
   const textColor = useThemeColor({}, "text");
 
@@ -16,10 +16,13 @@ const ThemedTextInput = ({ icon, ...rest }: Props) => {
 
   return (
     <View
-      style={{
-        ...styles.border,
-        borderColor: isActive ? primaryColor : "#ccc",
-      }}
+      style={[
+        {
+          ...styles.border,
+          borderColor: isActive ? primaryColor : "#ccc",
+        },
+        style,
+      ]}
       onTouchStart={() => inputRef.current?.focus()}
     >
       {icon && (
@@ -48,7 +51,7 @@ const styles = StyleSheet.create({
   border: {
     borderWidth: 1,
     borderRadius: 5,
-    padding: 5,
+    padding: 10,
     marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
