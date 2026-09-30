@@ -1,10 +1,14 @@
+import { useCameraStore } from "@/presentation/store/useCameraStore";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -14,18 +18,49 @@ import {
 } from "react-native";
 
 export default function CameraScreen() {
+  const { addSelectedImage } = useCameraStore();
   const [facing, setFacing] = useState<CameraType>("back");
-  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [mediaPermission, requestMediaPermission] =
+    MediaLibrary.usePermissions();
   const [selectedImage, setSelectedImage] = useState<string>();
 
   const cameraRef = useRef<CameraView>(null);
 
-  if (!permission) {
+  const onRequestPermissions = async () => {
+    try {
+      const { status: cameraPermissionStatus } =
+        await requestCameraPermission();
+
+      if (cameraPermissionStatus !== "granted") {
+        Alert.alert(
+          "Lo siento",
+          "Necesitamos permiso a la cámara para tomar fotos",
+        );
+        return;
+      }
+
+      const { status: mediaPermissionStatus } = await requestMediaPermission();
+
+      if (mediaPermissionStatus !== "granted") {
+        Alert.alert(
+          "Lo siento",
+          "Necesitamos permiso a la galería para guardar las imágenes",
+        );
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", `Algo salió mal ocn los permisos`);
+    }
+  };
+
+  if (!cameraPermission) {
     // Camera permissions are still loading.
     return <View />;
   }
 
-  if (!permission.granted) {
+  if (!cameraPermission.granted) {
     // Camera permissions are not granted yet.
     return (
       <View
@@ -40,7 +75,7 @@ export default function CameraScreen() {
           Necesitamos permiso para usar la cámara y la galería
         </Text>
 
-        <TouchableOpacity onPress={requestPermission}>
+        <TouchableOpacity onPress={onRequestPermissions}>
           <ThemedText type="subtitle">Solicitar permiso</ThemedText>
         </TouchableOpacity>
       </View>
@@ -66,12 +101,34 @@ export default function CameraScreen() {
     router.dismiss();
   };
 
-  const onPictureAccepted = () => {
-    // TODO: implementar función
+  const onPictureAccepted = async () => {
+    if (!selectedImage) return;
+    await MediaLibrary.createAssetAsync(selectedImage);
+    addSelectedImage(selectedImage);
+    router.dismiss();
   };
 
   const onRetakePhoto = () => {
     setSelectedImage(undefined);
+  };
+
+  const onPickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      // allowsEditing: true,
+      aspect: [4, 3], // 4 de ancho por 3 de alto
+      quality: 0.5,
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+    });
+
+    if (result.canceled) return;
+
+    result.assets.forEach((asset) => {
+      addSelectedImage(asset.uri);
+    });
+
+    router.dismiss();
   };
 
   function toggleCameraFacing() {
@@ -95,7 +152,7 @@ export default function CameraScreen() {
         <ShutterButton onPress={onShutterButtonPress} />
 
         <FlipCameraButton onPress={toggleCameraFacing} />
-        <GalleryButton />
+        <GalleryButton onPress={onPickImages} />
         <ReturnCancelButton onPress={onReturnCancel} />
 
         {/* <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
